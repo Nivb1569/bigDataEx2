@@ -10,17 +10,17 @@ if __name__ == "__main__":
     sc = SparkContext(conf=conf)
 
     text_file = sc.textFile("hdfs://" + sys.argv[1])
-    word_counts_rdd = text_file.flatMap(lambda line: line.split(" ")) \
+    all_words_counts = text_file.flatMap(lambda line: line.split(" ")) \
              .map(lambda word: (word, 1)) \
              .reduceByKey(lambda a, b: a + b)
-    word_counts_rdd.cache()
-    total_distinct_words = word_counts_rdd.count()
-    print("--------------------------------------------")
-    print(f"Total distinct words found: {total_distinct_words}")
 
-    filtered_counts = word_counts_rdd.filter(lambda x: len(x[0])>5)
-    result_list = filtered_counts.takeOrdered(40, key = lambda x: -x[1])
+    all_words_counts.cache()
 
-    # print (repr(list)[1:-1])
-    print(*result_list, sep="\n")
+    filtered_counts = all_words_counts.filter(lambda x: len(x[0])>5)
+
+    list_top_40 = filtered_counts.takeOrdered(40, key = lambda x: -x[1])
+
     print("--------------------------------------------")
+    print(*list_top_40, sep="\n")
+    print("--------------------------------------------")
+    print("Total distinct words (all lengths):", all_words_counts.count())
